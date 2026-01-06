@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement: MonoBehaviour{
@@ -11,18 +12,13 @@ public class PlayerMovement: MonoBehaviour{
 
     private void Awake() => rb = GetComponent<Rigidbody2D>();
 
-    private void Update(){
-        //Inputs
-        movement.x = Input.GetAxisRaw("Horizontal");
-        movement.y = Input.GetAxisRaw("Vertical");
+    public void OnMove(InputAction.CallbackContext context){
+        movement = context.ReadValue<Vector2>();
 
-        //fix diagonals
         if(movement.magnitude > 1) movement = movement.normalized;
-
-        //last input
         if(movement != Vector2.zero) lastDirection = movement;
     }
 
-    void FixedUpdate() => rb.linearVelocity = movement * speed;
+    private void FixedUpdate() => rb.linearVelocity = movement * speed;
     public Vector2 GetLastDirection(){return lastDirection;}
 }
