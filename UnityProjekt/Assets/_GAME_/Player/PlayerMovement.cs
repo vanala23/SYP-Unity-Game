@@ -8,8 +8,7 @@ public class PlayerMovement: MonoBehaviour{
     public float speed = 4f;
 
     private Rigidbody2D rb;
-    private Vector2 movement;
-    private Vector2 lastDirection = Vector2.down;
+    private Vector2 movement, lastDirection;
     private Animator animator;
 
     private void Awake(){
@@ -25,7 +24,7 @@ public class PlayerMovement: MonoBehaviour{
             animator.SetFloat("InputX", movement.x);
             animator.SetFloat("InputY", movement.y);
 
-            if(movement != Vector2.zero) lastDirection = movement;
+            if(movement != Vector2.zero) { lastDirection = movement; }
         }
 
         if(context.canceled){
