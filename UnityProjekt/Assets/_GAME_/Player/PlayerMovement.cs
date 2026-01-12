@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,15 +10,32 @@ public class PlayerMovement: MonoBehaviour{
     private Rigidbody2D rb;
     private Vector2 movement;
     private Vector2 lastDirection = Vector2.down;
+    private Animator animator;
 
-    private void Awake() => rb = GetComponent<Rigidbody2D>();
+    private void Awake(){
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+    }
 
     public void OnMove(InputAction.CallbackContext context){
         movement = context.ReadValue<Vector2>();
 
-        if(movement.magnitude > 1) movement = movement.normalized;
-        if(movement != Vector2.zero) lastDirection = movement;
+        if(context.performed){
+            animator.SetBool("IsWalking", true);
+            animator.SetFloat("InputX", movement.x);
+            animator.SetFloat("InputY", movement.y);
+
+            if(movement != Vector2.zero) lastDirection = movement;
+        }
+
+        if(context.canceled){
+            movement = Vector2.zero;
+            animator.SetBool("IsWalking", false);
+            animator.SetFloat("LastInputX", lastDirection.x);
+            animator.SetFloat("LastInputY", lastDirection.y);
+        }
     }
+
 
     private void FixedUpdate() => rb.linearVelocity = movement * speed;
     public Vector2 GetLastDirection(){return lastDirection;}
