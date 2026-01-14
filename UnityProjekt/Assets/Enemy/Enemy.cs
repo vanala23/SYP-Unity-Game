@@ -5,6 +5,10 @@ public abstract class Enemy: MonoBehaviour{
     [Header("References")]
     [SerializeField] protected Transform player;
 
+    [Header("Stats")]
+    [SerializeField] protected int maxHP;
+    [SerializeField] protected int attackPower;
+
     [Header("Movement")]
     [SerializeField] protected float moveSpeed;
 
@@ -12,16 +16,17 @@ public abstract class Enemy: MonoBehaviour{
     [SerializeField] protected float viewDistance = 5f;
     [SerializeField] protected LayerMask obstacleMask;
 
+    protected int currentHP;
     protected Vector2 lastSeenPosition;
     protected bool hasLOS;
     protected State currentState = State.Idle;
 
     protected virtual void Update(){
-        checkLOS();
-        updateState();
+        CheckLOS();
+        UpdateState();
     }
 
-    protected void checkLOS(){
+    protected void CheckLOS(){
         Vector2 origin = transform.position;
         Vector2 target = player.position;
         Vector2 direction = (target - origin).normalized;
@@ -32,16 +37,28 @@ public abstract class Enemy: MonoBehaviour{
             return;
         }
 
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, obstacleMask);
+        RaycastHit2D hit = Physics2D.Raycast(origin, direction, distance, obstacleMask);
+        hasLOS = !hit;
+
         Debug.DrawRay(origin, direction * distance, Color.red);
-        hasLOS = hit.collider == null;
 
         if(hasLOS) lastSeenPosition = target;
     }
 
+    public virtual void TakeDamage(int amount){
+        currentHP -= amount;
+
+        if(currentHP <= 0) Die();
+    }
+
+    protected virtual void Die(){
+        Destroy(gameObject);
+    }
+
+
     protected abstract void OnDrawGizmosSelected();
     
-    protected abstract void updateState();
+    protected abstract void UpdateState();
 
     protected enum State{
         Idle,

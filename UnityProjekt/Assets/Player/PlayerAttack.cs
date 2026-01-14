@@ -3,7 +3,9 @@ using UnityEngine.InputSystem;
 using System.Collections;
 
 public class PlayerAttack: MonoBehaviour{
-    public float attackCooldown = 0.25f;
+    [Header("Stats")]
+    [SerializeField] private Sword sword;
+    [SerializeField] public float attackCooldown = 0.25f;
     private bool canAttack = true;
 
     public void OnAttack(InputAction.CallbackContext context){

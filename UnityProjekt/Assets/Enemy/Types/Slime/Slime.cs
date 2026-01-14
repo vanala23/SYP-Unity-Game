@@ -6,14 +6,14 @@ public class Slime: Enemy{
     [SerializeField] private float attackRange = 1.2f;
     [SerializeField] private float attackCooldown = 1.5f;
     [SerializeField] private float attackDuration = 0.6f;
-    [SerializeField] private float searchDuration = 2f;
-    private float searchTimer;
-
 
     private bool isAttacking;
-    private float attackTimeLeft;
+    private float attackTimer, attackTimeLeft;
     private Vector2 attackVelocity;
-    private float attackTimer;
+
+    [Header("Search")]
+    [SerializeField] private float searchDuration = 2f;
+    private float searchTimer;
     private Animator animator;
     private Rigidbody2D rb;
     private Vector2 lastDirection = Vector2.down;
@@ -22,11 +22,12 @@ public class Slime: Enemy{
     private void Awake(){
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        currentHP = maxHP;
     }
 
-    protected override void updateState(){
+    protected override void UpdateState(){
         if(isAttacking){
-            handleAttackMovement();
+            HandleAttackMovement();
             return;
         }
     
@@ -46,12 +47,12 @@ public class Slime: Enemy{
                     return;
                 }
 
-                chasePlayer();
+                ChasePlayer();
                 break;
     
             case State.Search:
                 searchTimer -= Time.deltaTime;
-                moveTowards(lastSeenPosition);
+                MoveTowards(lastSeenPosition);
 
                 if(searchTimer <= 0f){
                     rb.linearVelocity = Vector2.zero;
@@ -69,7 +70,7 @@ public class Slime: Enemy{
     }
 
 
-    private void chasePlayer(){
+    private void ChasePlayer(){
         float distance = Vector2.Distance(transform.position, player.position);
         if(!hasLOS){
             rb.linearVelocity = Vector2.zero;
@@ -80,15 +81,15 @@ public class Slime: Enemy{
 
         if(distance <= attackRange && attackTimer <= 0f){
             Debug.Log("Attack!");
-            attack();
+            Attack();
             attackTimer = attackCooldown;
             return;
         }
 
-        moveTowards(player.position);
+        MoveTowards(player.position);
     }
 
-    private void moveTowards(Vector2 target){
+    private void MoveTowards(Vector2 target){
         Vector2 direction = (target - (Vector2)transform.position).normalized;
 
         if(direction != Vector2.zero) lastDirection = direction;
@@ -100,7 +101,7 @@ public class Slime: Enemy{
         animator.SetFloat("MoveY", direction.y);
     }
 
-    private void attack(){
+    private void Attack(){
         isAttacking = true;
         attackTimeLeft = attackDuration;
 
@@ -122,7 +123,7 @@ public class Slime: Enemy{
         animator.SetTrigger("Attack");
     }
 
-    private void handleAttackMovement(){
+    private void HandleAttackMovement(){
         attackTimeLeft -= Time.deltaTime;
         rb.linearVelocity = attackVelocity;
 
@@ -144,5 +145,13 @@ public class Slime: Enemy{
 
         Gizmos.color = hasLOS ? Color.yellow : Color.lightBlue;
         Gizmos.DrawLine(transform.position, lastSeenPosition);
+    }
+
+    public override void TakeDamage(int amount){
+        base.TakeDamage(amount);
+    }
+
+    private void Die(){
+        base.Die();
     }
 }
