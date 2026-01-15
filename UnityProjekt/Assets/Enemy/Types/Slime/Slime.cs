@@ -1,132 +1,53 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class Slime: Enemy{
+public class Slime : Enemy
+{
     [Header("Attack")]
     [SerializeField] private float attackRange = 1.2f;
     [SerializeField] private float attackCooldown = 1.5f;
     [SerializeField] private float attackDuration = 0.6f;
 
+    private float attackTimer;
     private bool isAttacking;
-    private float attackTimer, attackTimeLeft;
+    private float attackTimeLeft;
     private Vector2 attackVelocity;
 
-    [Header("Search")]
-    [SerializeField] private float searchDuration = 2f;
-    private float searchTimer;
     private Animator animator;
-    private Rigidbody2D rb;
     private Vector2 lastDirection = Vector2.down;
 
-
-    private void Awake(){
-        rb = GetComponent<Rigidbody2D>();
+    protected override void Awake(){
+        base.Awake();
         animator = GetComponent<Animator>();
-        currentHP = maxHP;
     }
 
-    protected override void UpdateState(){
-        if(isAttacking){
-            HandleAttackMovement();
-            return;
-        }
-    
+    protected override void Update(){
+        base.Update();
+
+        if(isAttacking) HandleAttackMovement();
+
         attackTimer -= Time.deltaTime;
-    
-        switch(currentState){
-            case State.Idle:
-                animator.SetBool("IsMoving", false);
-                if(hasLOS) currentState = State.Chase;
-                break;
-    
-            case State.Chase:
-                if(!hasLOS){
-                    rb.linearVelocity = Vector2.zero;
-                    animator.SetBool("IsMoving", false);
-                    currentState = State.Search;
-                    return;
-                }
-
-                ChasePlayer();
-                break;
-    
-            case State.Search:
-                if(hasLOS){
-                    currentState = State.Chase;
-                    return;
-                }
-                
-                searchTimer -= Time.deltaTime;
-                MoveTowards(lastSeenPosition);
-
-                if(searchTimer <= 0f){
-                    rb.linearVelocity = Vector2.zero;
-                    animator.SetBool("IsMoving", false);
-                    searchTimer = searchDuration;
-                    currentState = State.Idle;
-                    return;
-                }
-
-                if(Vector2.Distance(transform.position, lastSeenPosition) < 0.2f){
-                    rb.linearVelocity = Vector2.zero;
-                    currentState = State.Idle;
-                }
-                break;
-        }
     }
 
+    protected override bool CanAttack(){
+        if(isAttacking) return false;
 
-    private void ChasePlayer(){
-        float distance = Vector2.Distance(transform.position, player.position);
-        if(!hasLOS){
-            Debug.Log("SEARCH at " + lastSeenPosition);
-            searchTimer = searchDuration;
-            currentState = State.Search;
-            return;
-        }
-
-
-        if(distance <= attackRange && attackTimer <= 0f){
-            Debug.Log("Attack!");
-            Attack();
-            attackTimer = attackCooldown;
-            return;
-        }
-
-        MoveTowards(player.position);
+        float dist = Vector2.Distance(transform.position, player.position);
+        return dist <= attackRange && attackTimer <= 0f;
     }
 
-    private void MoveTowards(Vector2 target){
-        Vector2 direction = (target - (Vector2)transform.position).normalized;
-
-        if(direction != Vector2.zero) lastDirection = direction;
-
-        rb.linearVelocity = direction * moveSpeed;
-
-        animator.SetBool("IsMoving", true);
-        animator.SetFloat("MoveX", direction.x);
-        animator.SetFloat("MoveY", direction.y);
-    }
-
-    private void Attack(){
+    protected override void DoAttack(){
+        attackTimer = attackCooldown;
         isAttacking = true;
         attackTimeLeft = attackDuration;
 
-        Vector2 start = transform.position;
-        Vector2 target = player.position;
-
-        Vector2 dir = (target - start);
-        float distance = dir.magnitude;
-
-        if(distance > 0) dir.Normalize();
-
-        attackVelocity = dir * (distance / attackDuration);
+        Vector2 dir = (player.position - transform.position).normalized;
+        attackVelocity = dir * (Vector2.Distance(transform.position, player.position) / attackDuration);
 
         lastDirection = dir;
 
         animator.SetBool("IsMoving", false);
-        animator.SetFloat("MoveX", lastDirection.x);
-        animator.SetFloat("MoveY", lastDirection.y);
+        animator.SetFloat("MoveX", dir.x);
+        animator.SetFloat("MoveY", dir.y);
         animator.SetTrigger("Attack");
     }
 
@@ -140,27 +61,22 @@ public class Slime: Enemy{
         }
     }
 
+    protected override void OnMove(Vector2 dir){
+        if(dir != Vector2.zero) lastDirection = dir;
+
+        animator.SetBool("IsMoving", true);
+        animator.SetFloat("MoveX", dir.x);
+        animator.SetFloat("MoveY", dir.y);
+    }
+
+    protected override void OnStop(){
+        animator.SetBool("IsMoving", false);
+    }
+
     protected override void OnDrawGizmosSelected(){
+        base.OnDrawGizmosSelected();
+
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
-
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(transform.position, viewDistance);
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(lastSeenPosition, 0.2f);
-
-        Gizmos.color = hasLOS ? Color.yellow : Color.lightBlue;
-        Gizmos.DrawLine(transform.position, lastSeenPosition);
-    }
-
-    public override void TakeDamage(int amount){
-        base.TakeDamage(amount);
-
-        if(currentHP <= 0) Die();
-    }
-
-    public override void Die(){
-        base.Die();
     }
 }
