@@ -51,12 +51,18 @@ public class Slime: Enemy{
                 break;
     
             case State.Search:
+                if(hasLOS){
+                    currentState = State.Chase;
+                    return;
+                }
+                
                 searchTimer -= Time.deltaTime;
                 MoveTowards(lastSeenPosition);
 
                 if(searchTimer <= 0f){
                     rb.linearVelocity = Vector2.zero;
                     animator.SetBool("IsMoving", false);
+                    searchTimer = searchDuration;
                     currentState = State.Idle;
                     return;
                 }
@@ -73,11 +79,12 @@ public class Slime: Enemy{
     private void ChasePlayer(){
         float distance = Vector2.Distance(transform.position, player.position);
         if(!hasLOS){
-            rb.linearVelocity = Vector2.zero;
+            Debug.Log("SEARCH at " + lastSeenPosition);
             searchTimer = searchDuration;
             currentState = State.Search;
             return;
         }
+
 
         if(distance <= attackRange && attackTimer <= 0f){
             Debug.Log("Attack!");
@@ -149,9 +156,11 @@ public class Slime: Enemy{
 
     public override void TakeDamage(int amount){
         base.TakeDamage(amount);
+
+        if(currentHP <= 0) Die();
     }
 
-    private void Die(){
+    public override void Die(){
         base.Die();
     }
 }

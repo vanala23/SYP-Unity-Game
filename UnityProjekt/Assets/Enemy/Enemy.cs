@@ -26,6 +26,7 @@ public abstract class Enemy: MonoBehaviour{
         UpdateState();
     }
 
+
     protected void CheckLOS(){
         Vector2 origin = transform.position;
         Vector2 target = player.position;
@@ -36,22 +37,19 @@ public abstract class Enemy: MonoBehaviour{
             hasLOS = false;
             return;
         }
-
+        
         RaycastHit2D hit = Physics2D.Raycast(origin, direction, distance, obstacleMask);
         hasLOS = !hit;
 
-        Debug.DrawRay(origin, direction * distance, Color.red);
-
+        Debug.DrawRay(origin, direction * distance, hasLOS ? Color.green : Color.red);
         if(hasLOS) lastSeenPosition = target;
     }
 
     public virtual void TakeDamage(int amount){
         currentHP -= amount;
-
-        if(currentHP <= 0) Die();
     }
 
-    protected virtual void Die(){
+    public virtual void Die(){
         Destroy(gameObject);
     }
 
