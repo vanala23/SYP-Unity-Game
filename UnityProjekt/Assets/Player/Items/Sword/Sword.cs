@@ -1,22 +1,25 @@
 using UnityEngine;
+using System.Collections;
 
-public class Sword : MonoBehaviour{
-    [Header("Stats")]
-    [SerializeField] private int damage;
-
-    private Collider2D collider;
+[RequireComponent(typeof(Collider2D))]
+public class Sword: Weapon{
+    private Collider2D hitbox;
 
     private void Awake(){
-        collider = GetComponent<Collider2D>();
-        collider.enabled = false;
+        hitbox = GetComponent<Collider2D>();
+        hitbox.enabled = false;
     }
 
-    public void EnableHitbox(){
-        collider.enabled = true;
-    }
+    protected override IEnumerator AttackRoutine(Vector2 direction){
+        canAttack = false;
 
-    public void DisableHitbox(){
-        collider.enabled = false;
+        transform.right = direction;
+        hitbox.enabled = true;
+        yield return new WaitForSeconds(0.1f);
+        hitbox.enabled = false;
+
+        yield return new WaitForSeconds(cooldown);
+        canAttack = true;
     }
 
     private void OnTriggerEnter2D(Collider2D other){

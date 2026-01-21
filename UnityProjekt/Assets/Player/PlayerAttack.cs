@@ -4,19 +4,14 @@ using System.Collections;
 
 public class PlayerAttack: MonoBehaviour{
     [Header("Stats")]
-    [SerializeField] private Sword sword;
-    [SerializeField] public float attackCooldown = 0.25f;
-    private bool canAttack = true;
+    [SerializeField] private Weapon weapon;
+    [SerializeField] private Transform aimSource;
 
     public void OnAttack(InputAction.CallbackContext context){
-        if(!context.performed || !canAttack) return;
-        StartCoroutine(Attack());
-    }
+        if(!context.performed) return;
 
-    private IEnumerator Attack(){
-        canAttack = false;
-        Debug.Log("ATTACKED!");
-        yield return new WaitForSeconds(attackCooldown);
-        canAttack = true;
+        Vector2 direction = (Mouse.current.position.ReadValue() - (Vector2) Camera.main.WorldToScreenPoint(aimSource.position)).normalized;
+
+        weapon.Attack(direction);
     }
 }
