@@ -8,7 +8,7 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Obstacles
   - Water
   - UI
   - Player
@@ -52,6 +52,9 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 816287327
+    locked: 0
+  - name: Enemies
+    uniqueID: 2448167263
     locked: 0
   - name: WalkBehind
     uniqueID: 2780639671
