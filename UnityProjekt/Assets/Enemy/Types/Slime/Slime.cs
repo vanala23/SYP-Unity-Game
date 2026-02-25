@@ -6,6 +6,9 @@ public class Slime : Enemy{
     [SerializeField] private float attackCooldown = 1.5f;
     [SerializeField] private float attackDuration = 0.4f;
 
+    [Header("Hitbox")]
+    [SerializeField] private GameObject attackHitbox;
+
     private float attackTimer;
     private bool isAttacking;
     private float attackTimeLeft;
@@ -18,6 +21,8 @@ public class Slime : Enemy{
         base.Awake();
 
         animator = GetComponent<Animator>();
+
+        attackHitbox.SetActive(false);
     }
 
     protected override void Update(){
@@ -45,13 +50,17 @@ public class Slime : Enemy{
         attackTimeLeft = attackDuration;
 
         Vector2 dir = (player.position - transform.position).normalized;
-        attackVelocity = dir * (Vector2.Distance(transform.position, player.position) / attackDuration);
+
         lastDirection = dir;
+
+        attackVelocity = dir * (attackRange / attackDuration);
 
         animator.SetBool("IsMoving", false);
         animator.SetFloat("MoveX", dir.x);
         animator.SetFloat("MoveY", dir.y);
         animator.SetTrigger("Attack");
+
+        attackHitbox.SetActive(true);
     }
 
     private void HandleAttackMovement(){
@@ -61,7 +70,9 @@ public class Slime : Enemy{
 
         if(attackTimeLeft <= 0f){
             isAttacking = false;
+
             rb.linearVelocity = Vector2.zero;
+            attackHitbox.SetActive(false);
         }
     }
 
@@ -70,7 +81,6 @@ public class Slime : Enemy{
             lastDirection = dir;
 
         animator.SetBool("IsMoving", true);
-
         animator.SetFloat("MoveX", dir.x);
         animator.SetFloat("MoveY", dir.y);
     }
@@ -83,7 +93,6 @@ public class Slime : Enemy{
         base.OnDrawGizmosSelected();
 
         Gizmos.color = Color.red;
-
-        Gizmos.DrawWireSphere( transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }

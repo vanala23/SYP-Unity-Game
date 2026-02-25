@@ -151,8 +151,6 @@ public abstract class Enemy : MonoBehaviour{
             lastSeenPosition = target;
 
         Debug.DrawRay( origin, dir * distance, hasLOS ? Color.green : Color.red);
-
-        Debug.Log("LOS: " + hasLOS);
     }
 
     #endregion
