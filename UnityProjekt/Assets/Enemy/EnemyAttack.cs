@@ -28,8 +28,6 @@ public class EnemyAttack: MonoBehaviour{
     private System.Collections.IEnumerator AttackRoutine(){
         canAttack = false;
 
-        Debug.Log("Enemy attacked player");
-
         // damage for player later
 
         yield return new WaitForSeconds(cooldown);

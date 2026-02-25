@@ -1,12 +1,14 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
-public abstract class Enemy: MonoBehaviour{
+public abstract class Enemy : MonoBehaviour{
     [Header("References")]
     [SerializeField] protected Transform player;
 
     [Header("Stats")]
     [SerializeField] protected int maxHP = 3;
+    [SerializeField] protected int attackPower = 1;
+
+    [Header("Movement")]
     [SerializeField] protected float moveSpeed = 2f;
 
     [Header("Vision")]
@@ -17,20 +19,18 @@ public abstract class Enemy: MonoBehaviour{
     [SerializeField] protected float searchDuration = 2f;
 
     protected int currentHP;
-    protected Rigidbody2D rb;
-
     protected bool hasLOS;
     protected Vector2 lastSeenPosition;
 
-    protected float searchTimer;
+    protected Rigidbody2D rb;
 
     protected State currentState = State.Idle;
+    protected float searchTimer;
 
     protected enum State{
         Idle,
         Chase,
-        Search,
-        Attack
+        Search
     }
 
     protected virtual void Awake(){
@@ -38,7 +38,14 @@ public abstract class Enemy: MonoBehaviour{
         currentHP = maxHP;
 
         if(player == null)
-            player = GameObject.FindGameObjectWithTag("Player").transform;
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if(player == null){
+            Debug.LogError($"{name} cannot find Player!");
+            enabled = false;
+        }
+
+        Debug.Log("Player ref: " + player);
     }
 
     protected virtual void Update(){
@@ -46,81 +53,81 @@ public abstract class Enemy: MonoBehaviour{
         UpdateState();
     }
 
-    #region STATE MACHINE
+    #region STATE C
 
     protected virtual void UpdateState(){
         switch(currentState){
             case State.Idle:
-                Stop();
-
-                if(hasLOS) 
-                    currentState = State.Chase;
+                OnIdle();
                 break;
 
-
             case State.Chase:
-                if(!hasLOS){
-                    searchTimer = searchDuration;
-                    currentState = State.Search;
-                    return;
-                }
-
-                if(CanAttack()){
-                    currentState = State.Attack;
-                    return;
-                }
-
-                MoveTowards(player.position);
+                OnChase();
                 break;
 
             case State.Search:
-                MoveTowards(lastSeenPosition);
-                searchTimer -= Time.deltaTime;
-
-                if(hasLOS){
-                    currentState = State.Chase;
-                    return;
-                }
-
-                if(searchTimer <= 0 || Vector2.Distance(transform.position, lastSeenPosition) < 0.2f){
-                    currentState = State.Idle;
-                }
+                OnSearch();
                 break;
+        }
+    }
 
-            case State.Attack:
-                Stop();
+    protected virtual void OnIdle(){
+        Stop();
 
-                if(!CanAttack()){
-                    currentState = State.Chase;
-                    return;
-                }
+        if(hasLOS)
+            currentState = State.Chase;
+    }
 
-                DoAttack();
-                break;
+    protected virtual void OnChase(){
+        if(!hasLOS){
+            searchTimer = searchDuration;
+            currentState = State.Search;
+            return;
+        }
+
+        if(CanAttack()){
+            DoAttack();
+            return;
+        }
+
+        MoveTowards(player.position);
+    }
+
+    protected virtual void OnSearch(){
+        if(hasLOS){
+            currentState = State.Chase;
+            return;
+        }
+
+        searchTimer -= Time.deltaTime;
+
+        MoveTowards(lastSeenPosition);
+
+        if(searchTimer <= 0f || Vector2.Distance(transform.position, lastSeenPosition) < 0.2f){
+            currentState = State.Idle;
         }
     }
 
     #endregion
 
-
     #region MOVEMENT
 
     protected void MoveTowards(Vector2 target){
         Vector2 dir = (target - (Vector2)transform.position).normalized;
-
         rb.linearVelocity = dir * moveSpeed;
+
         OnMove(dir);
     }
 
     protected void Stop(){
         rb.linearVelocity = Vector2.zero;
+
         OnStop();
     }
 
     #endregion
 
-
-    #region LOS
+    #region VISION
 
     protected void CheckLOS(){
         if(player == null) return;
@@ -143,18 +150,19 @@ public abstract class Enemy: MonoBehaviour{
         if(hasLOS)
             lastSeenPosition = target;
 
-        Debug.DrawRay(origin, dir * distance, hasLOS ? Color.green : Color.red);
+        Debug.DrawRay( origin, dir * distance, hasLOS ? Color.green : Color.red);
+
+        Debug.Log("LOS: " + hasLOS);
     }
 
     #endregion
 
-
     #region DAMAGE
 
-    public virtual void TakeDamage(int damage){
-        currentHP -= damage;
+    public virtual void TakeDamage(int amount){
+        currentHP -= amount;
 
-        if(currentHP <= 0)
+        if (currentHP <= 0)
             Die();
     }
 
@@ -164,21 +172,14 @@ public abstract class Enemy: MonoBehaviour{
 
     #endregion
 
-
     #region HOOKS
 
     protected virtual bool CanAttack() => false;
-
     protected virtual void DoAttack(){}
-
     protected virtual void OnMove(Vector2 dir){}
-
     protected virtual void OnStop(){}
 
     #endregion
-
-
-    #region GIZMOS
 
     protected virtual void OnDrawGizmosSelected(){
         Gizmos.color = Color.white;
@@ -187,6 +188,4 @@ public abstract class Enemy: MonoBehaviour{
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(lastSeenPosition, 0.2f);
     }
-
-    #endregion
 }
