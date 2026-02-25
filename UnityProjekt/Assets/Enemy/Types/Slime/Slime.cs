@@ -1,38 +1,28 @@
 using UnityEngine;
 
+[RequireComponent(typeof(EnemyAttack))]
 public class Slime: Enemy{
     private EnemyAttack attack;
-    private Rigidbody2D rb;
 
     protected override void Awake(){
-        rb = GetComponent<Rigidbody2D>();
+        base.Awake();
+
         attack = GetComponent<EnemyAttack>();
-        currentHP = maxHP;
     }
 
-    protected override void UpdateState(){
-        switch(currentState){
-            case State.Idle:
-                if(hasLOS) currentState = State.Chase;
-                break;
+    protected override bool CanAttack(){
+        return attack.CanAttack();
+    }
 
-            case State.Chase:
-                if(!hasLOS){
-                    currentState = State.Search;
-                    return;
-                }
+    protected override void DoAttack(){
+        attack.Attack();
+    }
 
-                if(attack.CanAttack()){
-                    attack.Attack();
-                    return;
-                }
+    protected override void OnMove(Vector2 dir){
+        // move animations later
+    }
 
-                MoveTowards(player.position);
-                break;
-
-            case State.Search:
-                MoveTowards(lastSeenPosition);
-                break;
-        }
+    protected override void OnStop(){
+        // idle animations later
     }
 }
