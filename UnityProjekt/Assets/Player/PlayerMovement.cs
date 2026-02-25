@@ -20,18 +20,18 @@ public class PlayerMovement: MonoBehaviour{
         movement = context.ReadValue<Vector2>();
 
         if(context.performed){
-            animator.SetBool("IsWalking", true);
-            animator.SetFloat("InputX", movement.x);
-            animator.SetFloat("InputY", movement.y);
+            animator.SetBool("IsMoving", true);
+            animator.SetFloat("MoveX", movement.x);
+            animator.SetFloat("MoveY", movement.y);
 
             if(movement != Vector2.zero) { lastDirection = movement; }
         }
 
         if(context.canceled){
             movement = Vector2.zero;
-            animator.SetBool("IsWalking", false);
-            animator.SetFloat("LastInputX", lastDirection.x);
-            animator.SetFloat("LastInputY", lastDirection.y);
+            animator.SetBool("IsMoving", false);
+            animator.SetFloat("MoveX", lastDirection.x);
+            animator.SetFloat("MoveY", lastDirection.y);
         }
     }
 
