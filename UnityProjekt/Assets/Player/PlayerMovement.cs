@@ -1,14 +1,14 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerMovement: MonoBehaviour{
+public class PlayerMovement : MonoBehaviour{
     [Header("Movement")]
     public float speed = 4f;
 
     private Rigidbody2D rb;
-    private Vector2 movement, lastDirection;
+    private Vector2 movement;
+    private Vector2 lastDirection = Vector2.down;
     private Animator animator;
 
     private void Awake(){
@@ -19,23 +19,26 @@ public class PlayerMovement: MonoBehaviour{
     public void OnMove(InputAction.CallbackContext context){
         movement = context.ReadValue<Vector2>();
 
-        if(context.performed){
-            animator.SetBool("IsMoving", true);
+        bool isMoving = movement != Vector2.zero;
+
+        animator.SetBool("IsMoving", isMoving);
+
+        if(isMoving){
+            lastDirection = movement;
+
             animator.SetFloat("MoveX", movement.x);
             animator.SetFloat("MoveY", movement.y);
-
-            if(movement != Vector2.zero) { lastDirection = movement; }
-        }
-
-        if(context.canceled){
-            movement = Vector2.zero;
-            animator.SetBool("IsMoving", false);
+        }else{
             animator.SetFloat("MoveX", lastDirection.x);
             animator.SetFloat("MoveY", lastDirection.y);
         }
     }
 
+    private void FixedUpdate(){
+        rb.linearVelocity = movement * speed;
+    }
 
-    private void FixedUpdate() => rb.linearVelocity = movement * speed;
-    public Vector2 GetLastDirection(){return lastDirection;}
+    public Vector2 GetLastDirection(){
+        return lastDirection;
+    }
 }
