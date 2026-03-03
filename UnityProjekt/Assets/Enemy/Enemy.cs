@@ -36,6 +36,16 @@ public abstract class Enemy : MonoBehaviour{
     protected virtual void Awake(){
         rb = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
+
+        if(player == null)
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if(player == null){
+            Debug.LogError($"{name} cannot find Player!");
+            enabled = false;
+        }
+
+        Debug.Log("Player ref: " + player);
     }
 
     protected virtual void Update(){
@@ -43,7 +53,7 @@ public abstract class Enemy : MonoBehaviour{
         UpdateState();
     }
 
-    #region ===== STATE MACHINE =====
+    #region STATE C
 
     protected virtual void UpdateState(){
         switch(currentState){
@@ -63,7 +73,9 @@ public abstract class Enemy : MonoBehaviour{
 
     protected virtual void OnIdle(){
         Stop();
-        if(hasLOS) currentState = State.Chase;
+
+        if(hasLOS)
+            currentState = State.Chase;
     }
 
     protected virtual void OnChase(){
@@ -88,33 +100,41 @@ public abstract class Enemy : MonoBehaviour{
         }
 
         searchTimer -= Time.deltaTime;
+
         MoveTowards(lastSeenPosition);
 
-        if(searchTimer <= 0f || Vector2.Distance(transform.position, lastSeenPosition) < 0.2f) currentState = State.Idle;
+        if(searchTimer <= 0f || Vector2.Distance(transform.position, lastSeenPosition) < 0.2f){
+            currentState = State.Idle;
+        }
     }
 
     #endregion
 
-    #region ===== MOVEMENT =====
+    #region MOVEMENT
 
     protected void MoveTowards(Vector2 target){
         Vector2 dir = (target - (Vector2)transform.position).normalized;
         rb.linearVelocity = dir * moveSpeed;
+
         OnMove(dir);
     }
 
     protected void Stop(){
         rb.linearVelocity = Vector2.zero;
+
         OnStop();
     }
 
     #endregion
 
-    #region ===== VISION =====
+    #region VISION
 
     protected void CheckLOS(){
+        if(player == null) return;
+
         Vector2 origin = transform.position;
         Vector2 target = player.position;
+
         float distance = Vector2.Distance(origin, target);
 
         if(distance > viewDistance){
@@ -124,19 +144,22 @@ public abstract class Enemy : MonoBehaviour{
 
         Vector2 dir = (target - origin).normalized;
         RaycastHit2D hit = Physics2D.Raycast(origin, dir, distance, obstacleMask);
-        hasLOS = !hit;
 
-        Debug.DrawRay(origin, dir * distance, hasLOS ? Color.green : Color.red);
+        hasLOS = hit.collider == null;
 
-        if(hasLOS) lastSeenPosition = target;
+        if(hasLOS)
+            lastSeenPosition = target;
+
+        Debug.DrawRay( origin, dir * distance, hasLOS ? Color.green : Color.red);
     }
 
     #endregion
 
-    #region ===== DAMAGE =====
+    #region DAMAGE
 
     public virtual void TakeDamage(int amount){
         currentHP -= amount;
+
         if (currentHP <= 0)
             Die();
     }
@@ -147,11 +170,10 @@ public abstract class Enemy : MonoBehaviour{
 
     #endregion
 
-    #region ===== HOOKS =====
+    #region HOOKS
 
     protected virtual bool CanAttack() => false;
     protected virtual void DoAttack(){}
-
     protected virtual void OnMove(Vector2 dir){}
     protected virtual void OnStop(){}
 
