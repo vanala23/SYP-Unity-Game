@@ -4,15 +4,11 @@ public class EnemyHitbox : MonoBehaviour{
     [SerializeField] private int damage = 1;
 
     private void OnTriggerEnter2D(Collider2D other){
-        if(other.CompareTag("Player")){
-            Debug.Log("Player hit");
+        PlayerHealth player = other.GetComponentInParent<PlayerHealth>();
 
-            Enemy enemy = other.GetComponentInParent<Enemy>();
-
-            if(enemy != null){
-                Debug.Log("Hit " + enemy.name);
-                enemy.TakeDamage(1);
-            }
+        if(player != null){
+            Debug.Log("Player hit: " + player.name);
+            player.TakeDamage(damage);
         }
     }
 }
