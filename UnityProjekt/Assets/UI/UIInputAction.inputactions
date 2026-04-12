@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "UIInputAction",
+    "maps": [
+        {
+            "name": "Menu",
+            "id": "00f8d550-a0ca-4d17-b93e-349766f739a0",
+            "actions": [
+                {
+                    "name": "ToggleMenu",
+                    "type": "Button",
+                    "id": "6ee8ee4b-2a1b-4f44-956c-700dc93715c8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "1e1ab478-6784-4043-a9d2-20abd2ccb2cb",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
